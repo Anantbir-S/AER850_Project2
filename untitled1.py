@@ -3,14 +3,10 @@
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, LeakyReLU
+from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
 import os
-
-# Set up the GPU configuration
-""" Configuring GPU Settings """
-gpus = tf.config.experimental.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
 
 # Define image dimensions
 """ Defining Input Image Shape """
@@ -44,8 +40,6 @@ validation_datagen = ImageDataGenerator(
 )
 
 """ Initializing Data Generators with image_dataset_from_directory """
-# Initialize data generators
-""" Initializing Data Generators """
 train_generator = train_datagen.flow_from_directory(
     train_dir,
     target_size=(500, 500),
@@ -59,7 +53,6 @@ validation_generator = validation_datagen.flow_from_directory(
     batch_size=32,
     class_mode='binary'
 )
-
 
 train_dataset = tf.keras.preprocessing.image_dataset_from_directory(
     train_dir,
@@ -83,30 +76,72 @@ validation_dataset = tf.keras.preprocessing.image_dataset_from_directory(
 print("Train dataset:", train_dataset)
 print("Validation dataset:", validation_dataset)
 
-# Define the CNN model architecture
-model = Sequential([
-    # First convolutional layer
-    Conv2D(32, (3, 3), activation='relu', input_shape=(500, 500, 3)),  # 32 filters, 3x3 kernel size
-    MaxPooling2D((2, 2)),  # 2x2 pool size
+# Define updated hyperparameters in model architecture
+""" Defining Updated Model Hyperparameters """
+updated_hyperparameters_model = Sequential([
+    # First convolutional layer with LeakyReLU activation
+    Conv2D(32, (3, 3), activation='linear', input_shape=input_image_shape),  # Start with 'linear' activation
+    LeakyReLU(alpha=0.1),  # Adding LeakyReLU activation after the layer
+    MaxPooling2D((2, 2)),
     
-    # Second convolutional layer
-    Conv2D(64, (3, 3), activation='relu'),  # 64 filters, 3x3 kernel size
-    MaxPooling2D((2, 2)),  # 2x2 pool size
+    # Second convolutional layer with ReLU activation
+    Conv2D(64, (3, 3), activation='relu'),  # Using 'relu' as another option
+    MaxPooling2D((2, 2)),
     
-    # Third convolutional layer
-    Conv2D(128, (3, 3), activation='relu'),  # 128 filters, 3x3 kernel size
-    MaxPooling2D((2, 2)),  # 2x2 pool size
+    # Third convolutional layer with LeakyReLU activation
+    Conv2D(128, (3, 3), activation='linear'),
+    LeakyReLU(alpha=0.1),
+    MaxPooling2D((2, 2)),
     
     # Flatten layer to prepare for dense layers
     Flatten(),
     
-    # Fully connected (Dense) layer
-    Dense(512, activation='relu'),
-    Dropout(0.5),  # Dropout layer to reduce overfitting
+    # Fully connected (Dense) layer with ReLU activation
+    Dense(512, activation='relu'),  # You can try 'elu' as an alternative
+    Dropout(0.5),
     
-    # Final output layer with 3 neurons (for 3 classes) and softmax activation for multi-class classification
+    # Final output layer with 3 neurons for 3 classes, using softmax activation
     Dense(3, activation='softmax')
 ])
 
+# Compile the updated model
+updated_hyperparameters_model.compile(
+    optimizer=Adam(),  # Adam optimizer
+    loss='categorical_crossentropy',  # Suitable for multi-class classification
+    metrics=['accuracy']  # Track accuracy during training
+)
+
 # Print model summary to confirm architecture
-model.summary()
+print("\nUpdated Model Architecture with Hyperparameters:")
+updated_hyperparameters_model.summary()
+
+# Train the model and capture training history
+history = updated_hyperparameters_model.fit(
+    train_dataset,
+    validation_data=validation_dataset,
+    epochs=10  # You can adjust the number of epochs based on your needs
+)
+
+# Plot training & validation accuracy values
+plt.figure(figsize=(14, 5))
+
+# Plot accuracy
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(loc='best')
+
+# Plot loss
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend(loc='best')
+
+plt.tight_layout()
+plt.show()
