@@ -59,28 +59,28 @@ validation_generator = validation_datagen.flow_from_directory(
 # Define the CNN model with increased dropout and regularization
 model = Sequential([
     Input(shape=input_image_shape),
-    Conv2D(32, (3, 3), activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+    Conv2D(32, (3, 3), activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.0001)),
     BatchNormalization(),
     LeakyReLU(alpha=0.2),
     MaxPooling2D((2, 2)),
     Dropout(0.3),
 
     # Second Convolutional Block
-    Conv2D(64, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+    Conv2D(64, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.0001)),
     BatchNormalization(),
     LeakyReLU(negative_slope=0.2),
     MaxPooling2D((2, 2)),
     Dropout(0.3),
 
     # Third Convolutional Block
-    Conv2D(128, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+    Conv2D(128, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.0001)),
     BatchNormalization(),
     LeakyReLU(negative_slope=0.2),
     MaxPooling2D((2, 2)),
     Dropout(0.3),
 
     # Fourth Convolutional Block
-    Conv2D(256, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+    Conv2D(256, (3, 3), kernel_regularizer=tf.keras.regularizers.l2(0.0001)),
     BatchNormalization(),
     LeakyReLU(negative_slope=0.2),
     MaxPooling2D((2, 2)),
@@ -88,7 +88,7 @@ model = Sequential([
 
     # Fully Connected Layers
     Flatten(),
-    Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+    Dense(512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.0001)),
     Dropout(0.7),  # Higher dropout for fully connected layer
 
     # Output Layer
@@ -105,7 +105,7 @@ def scheduler(epoch, lr):
 lr_scheduler = LearningRateScheduler(scheduler)
 
 # Compile the model with a lower initial learning rate
-model.compile(optimizer=Adam(learning_rate=0.0003),
+model.compile(optimizer=Adam(learning_rate=0.00015),
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
